@@ -59,6 +59,7 @@ typings/
 .rts2_cache_es/
 .rts2_cache_umd/
 
+._
 # Optional REPL history
 .node_repl_history
 
@@ -102,3 +103,7 @@ dist
 
 # TernJS port file
 .tern-port
+
+
+yarn.lock
+package-lock.json

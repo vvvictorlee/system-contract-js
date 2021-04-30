@@ -1,0 +1,10 @@
+{
+  "name": "system-contract-js",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:vvvictorlee/system-contract-js.git",
+  "license": "Unlicense",
+  "dependencies": {
+    "web3": "^1.3.5"
+  }
+}
