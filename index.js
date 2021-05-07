@@ -238,14 +238,16 @@ async function sendSignedTx(account, account_secrets, encodedabi, contract_addre
     var privateKey = Buffer.from(account_secrets, 'hex');
 
     const gasprice = await web3.eth.getGasPrice();
-
+console.log(value)
+console.log(web3.utils.toWei(value.toString()))
+console.log(web3.utils.toHex(web3.utils.toWei(value.toString())))
     var rawTx = {
         nonce: web3.utils.toHex(nonce),
         gasPrice: web3.utils.toHex(gasprice),
         gasLimit: web3.utils.toHex(3000000),
         from: account,
         to: contract_address,
-        value: web3.utils.toHex(value),
+        value: web3.utils.toHex(web3.utils.toWei(value.toString())),
         data: encodedabi,
         chainId: web3.utils.toHex(170)
     }

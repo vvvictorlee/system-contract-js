@@ -30,7 +30,7 @@ var Tx = require('ethereumjs-tx').Transaction;
 const ethereumjs_common = require('ethereumjs-common').default;
 
 async function sendSignedTx(account, account_secrets, encodedabi, contract_address, isCreateProposalOption,msg_value) {
-    // console.log(account, encodedabi, contract_address)
+    console.log(account, encodedabi, contract_address)
     let isCreateProposal = isCreateProposalOption || false
     let value = msg_value||0
     let nonce = await web3.eth.getTransactionCount(account, "pending");
