@@ -34,8 +34,9 @@ let Proposal = {};
 let abi = {};
 let Punish = {};
 let Validators = {};
-let id = "0x9009add07ce140a49356f7592fb9d54a90e53c1315a18e9421e4fcc4ea509310";//"0x90d99b1135c1beb013e7acf65c604e0562c5a6fb46daf9cd04355c2baa663a3e"
-
+let id = "0x996cdc4aac6436a79269f68c55d10140518cbfddbf5c4cc85da1aff73f98b32f"//"0x9009add07ce140a49356f7592fb9d54a90e53c1315a18e9421e4fcc4ea509310";//"0x90d99b1135c1beb013e7acf65c604e0562c5a6fb46daf9cd04355c2baa663a3e"
+let candidate = validators[5][0];
+let proxy = validators[2];
 instanceValidators();
 instancePunish();
 instanceProposal();
@@ -53,7 +54,7 @@ let handlers = {
     "cv": (async function () {
         await createOrEditValidator();
     }),
-    "vs": (async function () {
+    "s": (async function () {
         await stake();
     }),
     "p": (async function () {
@@ -107,8 +108,8 @@ async function getBlocks() {
     // let tx = await web3.eth.getTransaction("0x1e51278956cd375e3e7b29932b1f38c5164b10cca87144507c4a972ed2c2e1a9");
     // console.log(tx);
 
-let s = await web3.methods.debug_traceTransaction("0xf882b4fbda5af41705650c92c5832d9f734136456c15d5ea1ccb2cf15b4a2254")
-console.log(s)
+    // let s = await web3.methods.debug_traceTransaction("0xf882b4fbda5af41705650c92c5832d9f734136456c15d5ea1ccb2cf15b4a2254")
+    // console.log(s)
     // let code = await web3.eth.getCode("0x9F1739Dd75F1ed20880f27823e6d4EC99f640860");
     // console.log(code);
 
@@ -116,17 +117,19 @@ console.log(s)
 
 async function createProposal() {
     // await Proposal.methods.createProposal(validators[3][0], 'detail').send({ from: validators[3][0] });
-    let encodedabi = await Proposal.methods.createProposal(validators[6][0], 'detail').encodeABI();
-    await sendSignedTx(validators[4][0], validators[4][1], encodedabi, PROPOSAL, true);
+    console.log(candidate)
+    let encodedabi = await Proposal.methods.createProposal(candidate, 'road pool').encodeABI();
+    await sendSignedTx(proxy[0], proxy[1], encodedabi, PROPOSAL, true);
 }
 
 async function voteProposal() {
+    const vindex = 1;
     // await Proposal.methods.voteProposal(validators[4][0], true).send({ from: validators[1][0] });
     let encodedabi = await Proposal.methods.voteProposal(id, true).encodeABI();
     // await sendSignedTx(validator1, secrets[validator1], encodedabi, PROPOSAL);
-    console.log(validators)
+    // console.log(validators)
     // await sendSignedTx(validators[1][0], JSON.stringify(validators[1][1]), encodedabi, PROPOSAL);
-    await sendSignedTx(validators[0][0], validators[0][1], encodedabi, PROPOSAL);
+    await sendSignedTx(validators[vindex][0], validators[vindex][1], encodedabi, PROPOSAL);
 }
 
 async function proposals() {
@@ -137,17 +140,27 @@ async function proposals() {
     result = await Proposal.methods.votes(validators[1][0], id).call({ from: validators[1][0] });
     console.log("votes('', '')==", result);
 
-    result = await Proposal.methods.pass(validators[6][0]).call({ from: validators[1][0] });
+    result = await Proposal.methods.pass(candidate).call({ from: validators[1][0] });
     console.log("pass('')==", result);
 
 }
 
 async function stake() {
-    await Validators.methods.stake(validators[4][0]).send({ from: validators[1][0] });
+    // await Validators.methods.stake(validators[4][0]).send({ from: validators[1][0] });
+    let encodedabi = await Validators.methods.stake(candidate).encodeABI();
+    await sendSignedTx(proxy[0], proxy[1], encodedabi, VALIDATORS,false,32);
 }
 async function createOrEditValidator() {
-    await Validators.methods.createOrEditValidator(validators[4][0], "moniker", "identity", "website", "email", "details").send({ from: validators[4][0] });
+    // await Validators.methods.createOrEditValidator(candidate, "Road", "558665", "None", "sn4rkzen@gmail.com", "Road pool").send({ from: proxy });
+    let encodedabi = await Validators.methods.createOrEditValidator(candidate, "Road", "558665", "None", "sn4rkzen@gmail.com", "Road pool").encodeABI();
+    await sendSignedTx(proxy[0], proxy[1], encodedabi, VALIDATORS);
     // // address payable feeAddr, moniker, identity, website, email, details
+    // payable address & feeAddress : 0x4167d07ebae417245205834058d9c5883822f2af
+    // moniker : Road
+    // identity: hoo's ID 558665
+    // website : None
+    // email   : sn4rkzen@gmail.com
+    // details : Road pool
 }
 
 async function unstake() {
@@ -161,7 +174,7 @@ async function withdrawProfits() {
 }
 
 async function getValidators() {
-    const vv = [];
+    const vv = [candidate];
     for (let v of vv) {
         result = await Validators.methods.getValidatorInfo(v).call({ from: validators[1][0] });
         console.log(v, "getValidatorInfo==", result);
@@ -217,12 +230,12 @@ const ethereumjs_common = require('ethereumjs-common').default;
 
 // let encodedabi = await Proposal.methods.voteProposal('0x1b297ebe5720f9887b4302c56f932bc424920c2d707f5276cee99d0831651851', true).encodeABI();
 
-async function sendSignedTx(account, account_secrets, encodedabi, contract_address, isCreateProposalOption) {
-    console.log(account, account_secrets, encodedabi, contract_address)
+async function sendSignedTx(account, account_secrets, encodedabi, contract_address, isCreateProposalOption,msg_value) {
+    // console.log(account, encodedabi, contract_address)
     let isCreateProposal = isCreateProposalOption || false
+    let value = msg_value||0
     let nonce = await web3.eth.getTransactionCount(account, "pending");
     var privateKey = Buffer.from(account_secrets, 'hex');
-    console.log(privateKey, account_secrets)
 
     const gasprice = await web3.eth.getGasPrice();
 
@@ -232,14 +245,13 @@ async function sendSignedTx(account, account_secrets, encodedabi, contract_addre
         gasLimit: web3.utils.toHex(3000000),
         from: account,
         to: contract_address,
-        value: '0x00',
+        value: web3.utils.toHex(value),
         data: encodedabi,
         chainId: web3.utils.toHex(170)
     }
     var common = ethereumjs_common.forCustomChain('ropsten', { networkId: web3.utils.toHex(NETWORK_ID), chainId: web3.utils.toHex(CHAIN_ID), name: 'geth' }, 'muirGlacier');
     var tx = new Tx(rawTx, { "common": common });
 
-    console.log(privateKey)
     tx.sign(privateKey);
 
     var serializedTx = tx.serialize();
